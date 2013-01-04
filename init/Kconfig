@@ -798,7 +798,21 @@ menuconfig EMBEDDED
 	  This option allows certain base kernel options and settings
           to be disabled or tweaked. This is for specialized
           environments which can tolerate a "non-standard" kernel.
-          Only use this if you really know what you are doing.
+          Only use this if you reall+config MODULE_FORCE_VERMAGIC
+ 	 1288	
++  bool "Allow forced loading of modules with bad vermagic"
+ 	 1289	
++  default n
+ 	 1290	
++  depends on MODULE_FORCE_LOAD
+ 	 1291	
++  help
+ 	 1292	
++    Allow loading of modules with version information that does not match
+ 	 1293	
++    the currently running kernel. This is very bad.
+ 	 1294	
++y know what you are doing.
 
 config UID16
 	bool "Enable 16-bit UID system calls" if EMBEDDED
@@ -1231,6 +1245,14 @@ config MODULE_FORCE_LOAD
 	  Allow loading of modules without version information (ie. modprobe
 	  --force).  Forced module loading sets the 'F' (forced) taint flag and
 	  is usually a really bad idea.
+
+config MODULE_FORCE_VERMAGIC
+  bool "Allow forced loading of modules with bad vermagic"
+  default n
+  depends on MODULE_FORCE_LOAD
+  help
+    Allow loading of modules with version information that does not match
+    the currently running kernel. This is very bad.
 
 config MODULE_UNLOAD
 	bool "Module unloading"
