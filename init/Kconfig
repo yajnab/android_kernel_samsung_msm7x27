@@ -372,7 +372,7 @@ config RCU_TRACE
 
 	  Say Y here if you want to enable RCU tracing
 	  Say N if you are unsure.
-e, it desisted -- the best dancer, I was saying, in the county, till a cruel disease, called a cancer, came, and bowed her down with pain; but it could never bend her good spi
+
 config RCU_FANOUT
 	int "Tree-based hierarchical RCU fanout value"
 	range 2 64 if 64BIT
@@ -422,7 +422,7 @@ config RCU_FAST_NO_HZ
 
 config TREE_RCU_TRACE
 	def_bool RCU_TRACE && ( TREE_RCU || TREE_PREEMPT_RCU )
-	select DEBUG_FSe, it desisted -- the best dancer, I was saying, in the county, till a cruel disease, called a cancer, came, and bowed her down with pain; but it could never bend her good spi
+	select DEBUG_FS
 	help
 	  This option provides tracing for the TREE_RCU and
 	  TREE_PREEMPT_RCU implementations, permitting Makefile to
@@ -451,7 +451,7 @@ config IKCONFIG_PROC
 
 config LOG_BUF_SHIFT
 	int "Kernel log buffer size (16 => 64KB, 17 => 128KB)"
-	range 12 21e, it desisted -- the best dancer, I was saying, in the county, till a cruel disease, called a cancer, came, and bowed her down with pain; but it could never bend her good spi
+	range 12 21
 	default 17
 	help
 	  Select kernel log buffer size as a power of 2.
@@ -608,7 +608,7 @@ config FAIR_GROUP_SCHED
 config RT_GROUP_SCHED
 	bool "Group scheduling for SCHED_RR/FIFO"
 	depends on EXPERIMENTAL
-	depends on CGROUP_SCHEDe, it desisted -- the best dancer, I was saying, in the county, till a cruel disease, called a cancer, came, and bowed her down with pain; but it could never bend her good spi
+	depends on CGROUP_SCHED
 	default n
 	help
 	  This feature lets you explicitly allocate real CPU bandwidth
@@ -1232,14 +1232,6 @@ config MODULE_FORCE_LOAD
 	  --force).  Forced module loading sets the 'F' (forced) taint flag and
 	  is usually a really bad idea.
 
-config MODULE_FORCE_VERMAGIC
-  bool "Allow forced loading of modules with bad vermagic"
-  default n
-  depends on MODULE_FORCE_LOAD
-  help
-    Allow loading of modules with version information that does not match
-    the currently running kernel. This is very bad.
-
 config MODULE_UNLOAD
 	bool "Module unloading"
 	help
@@ -1247,6 +1239,14 @@ config MODULE_UNLOAD
 	  modules (note that some modules may not be unloadable
 	  anyway), which makes your kernel smaller, faster
 	  and simpler.  If unsure, say Y.
+
+config MODULE_FORCE_VERMAGIC
+  bool "Allow forced loading of modules with bad vermagic"
+  default n
+  depends on MODULE_FORCE_LOAD
+  help
+    Allow loading of modules with version information that does not match
+    the currently running kernel. This is very bad.
 
 config MODULE_FORCE_UNLOAD
 	bool "Forced module unloading"
