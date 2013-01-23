@@ -69,7 +69,7 @@ typedef struct
 	uint16_t y;			/*!< Y */
 } report_finger_info_t;
 
-static report_finger_info_t fingerInfo[MAX_USING_FINGER_NUM + 1]={0,};
+static report_finger_info_t fingerInfo[MAX_USING_FINGER_NUM + 1]={{0}, };
 
 struct synaptics_ts_data {
 	uint16_t addr;
@@ -717,7 +717,7 @@ static int synaptics_ts_suspend(struct i2c_client *client, pm_message_t mesg)
 	}
 	}
 	else
-		printk("[TSP] TSP isn't present.\n", __func__ );
+		printk("[TSP] TSP isn't present.%s+\n", __func__ );
 
 	TSP_forced_release_forkey();
 
@@ -852,7 +852,7 @@ static int synaptics_ts_resume(struct i2c_client *client)
 #endif
 	}
 	else
-		printk("[TSP] TSP isn't present.\n", __func__ );
+		printk("[TSP] TSP isn't present.%s+\n", __func__ );
 
 	printk("[TSP] %s-\n", __func__ );
 	return 0;
