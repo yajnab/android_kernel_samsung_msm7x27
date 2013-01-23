@@ -732,7 +732,6 @@ static DECLARE_DELAYED_WORK(ts_resume_work, ts_resume_work_func);
 static void ts_resume_work_func(struct work_struct *ignored)
 {
 	int ret, key, retry_count;
-	struct vreg *vreg_touch;
 	uint8_t i2c_addr = 0x1D;
 	uint8_t buf[1];
 	printk("[TSP] %s+\n", __func__ );
@@ -782,11 +781,10 @@ static void ts_resume_work_func(struct work_struct *ignored)
 
 static int synaptics_ts_resume(struct i2c_client *client)
 {
-	int ret, key, retry_count;
+	int ret;
 	struct vreg *vreg_touch;
-	struct synaptics_ts_data *ts = i2c_get_clientdata(client);
-	uint8_t i2c_addr = 0x1D;
-	uint8_t buf[1];
+	
+	
 
 	printk("[TSP] %s+\n", __func__ );
 	if( touch_present )
