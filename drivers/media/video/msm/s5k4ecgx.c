@@ -331,7 +331,7 @@ void s5k4ecgx_set_REG_TC_DBG_AutoAlgEnBits(int bit, int set)
 
 	if(bit == 3 && set == true)
 	{
-		if(REG_TC_DBG_AutoAlgEnBits & 0x8 == 1)return;
+		if((REG_TC_DBG_AutoAlgEnBits) & (0x8 == 1))return;
 		if(s5k4ecgx_status.scene == PCAM_SCENE_NIGHTSHOT)mdelay(250);
 		else mdelay(100);
 		REG_TC_DBG_AutoAlgEnBits = REG_TC_DBG_AutoAlgEnBits | 0x8;
@@ -341,7 +341,7 @@ void s5k4ecgx_set_REG_TC_DBG_AutoAlgEnBits(int bit, int set)
 	}
 	else if(bit == 3 && set == false)
 	{
-		if(REG_TC_DBG_AutoAlgEnBits & 0x8 == 0)return;
+		if((REG_TC_DBG_AutoAlgEnBits) & (0x8 == 0))return;
 		if(s5k4ecgx_status.scene == PCAM_SCENE_NIGHTSHOT)mdelay(250);
 		else mdelay(100);
 		REG_TC_DBG_AutoAlgEnBits = REG_TC_DBG_AutoAlgEnBits & 0xFFF7;
@@ -351,7 +351,7 @@ void s5k4ecgx_set_REG_TC_DBG_AutoAlgEnBits(int bit, int set)
 	}
 	else if(bit == 5 && set == true)
 	{
-		if(REG_TC_DBG_AutoAlgEnBits & 0x20 == 1)return;
+		if((REG_TC_DBG_AutoAlgEnBits) & (0x20 == 1))return;
 		if(s5k4ecgx_status.scene == PCAM_SCENE_NIGHTSHOT)mdelay(250);
 		else mdelay(100);
 		REG_TC_DBG_AutoAlgEnBits = REG_TC_DBG_AutoAlgEnBits | 0x20;
@@ -361,7 +361,7 @@ void s5k4ecgx_set_REG_TC_DBG_AutoAlgEnBits(int bit, int set)
 	}
 	else if(bit == 5 && set == false)
 	{
-		if(REG_TC_DBG_AutoAlgEnBits & 0x20 == 0)return;
+		if((REG_TC_DBG_AutoAlgEnBits) & (0x20 == 0))return;
 		if(s5k4ecgx_status.scene == PCAM_SCENE_NIGHTSHOT)mdelay(250);
 		else mdelay(100);
 		REG_TC_DBG_AutoAlgEnBits = REG_TC_DBG_AutoAlgEnBits & 0xFFDF;
@@ -1153,7 +1153,7 @@ void s5k4ecgx_set_preview(void)
 {
 #ifdef WORKAROUND_FOR_LOW_SPEED_I2C
 	unsigned int before_time, after_time, time_gab;
-	int *i2c_clk_addr;
+	static int *i2c_clk_addr;
 //	i2c_clk_addr = (int *)0xd500c004;
 	i2c_clk_addr = get_i2c_clock_addr(s5k4ecgx_client->adapter);
 
