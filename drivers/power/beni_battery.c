@@ -1199,14 +1199,9 @@ int calculate_batt_voltage(int vbatt_adc)
 {
 	int batt_volt = 0;
 
-	static int BatMax = 0;
-	static int BatMin = 0;
-	int BatSum = 0;
-	static int BatCount = 0;
-	static int BatAvg = 1;
-	static int batt_val[BATT_BUF] = {0,};
+	
 	static int prevVal = 0;
-	int i = 0;
+	
 
 #ifdef __CONTROL_CHARGING_SUDDEN_LEVEL_UP__
 	if(!prevVal)
