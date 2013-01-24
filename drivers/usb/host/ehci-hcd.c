@@ -423,23 +423,7 @@ static void ehci_shutdown(struct usb_hcd *hcd)
 	spin_unlock_irq(&ehci->lock);
 }
 
-static void ehci_port_power (struct ehci_hcd *ehci, int is_on)
-{
-	unsigned port;
 
-	if (!HCS_PPC (ehci->hcs_params))
-		return;
-
-	ehci_dbg (ehci, "...power%s ports...\n", is_on ? "up" : "down");
-	for (port = HCS_N_PORTS (ehci->hcs_params); port > 0; )
-		(void) ehci_hub_control(ehci_to_hcd(ehci),
-				is_on ? SetPortFeature : ClearPortFeature,
-				USB_PORT_FEAT_POWER,
-				port--, NULL, 0);
-	/* Flush those writes */
-	ehci_readl(ehci, &ehci->regs->command);
-	msleep(20);
-}
 
 /*-------------------------------------------------------------------------*/
 
@@ -624,95 +608,6 @@ static int ehci_init(struct usb_hcd *hcd)
 }
 
 /* start HC running; it's halted, ehci_init() has been run (once) */
-static int ehci_run (struct usb_hcd *hcd)
-{
-	struct ehci_hcd		*ehci = hcd_to_ehci (hcd);
-	int			retval;
-	u32			temp;
-	u32			hcc_params;
-
-	hcd->uses_new_polling = 1;
-	hcd->poll_rh = 0;
-
-	/* EHCI spec section 4.1 */
-	if ((retval = ehci_reset(ehci)) != 0) {
-		ehci_mem_cleanup(ehci);
-		return retval;
-	}
-	ehci_writel(ehci, ehci->periodic_dma, &ehci->regs->frame_list);
-	ehci_writel(ehci, (u32)ehci->async->qh_dma, &ehci->regs->async_next);
-
-	/*
-	 * hcc_params controls whether ehci->regs->segment must (!!!)
-	 * be used; it constrains QH/ITD/SITD and QTD locations.
-	 * pci_pool consistent memory always uses segment zero.
-	 * streaming mappings for I/O buffers, like pci_map_single(),
-	 * can return segments above 4GB, if the device allows.
-	 *
-	 * NOTE:  the dma mask is visible through dma_supported(), so
-	 * drivers can pass this info along ... like NETIF_F_HIGHDMA,
-	 * Scsi_Host.highmem_io, and so forth.  It's readonly to all
-	 * host side drivers though.
-	 */
-	hcc_params = ehci_readl(ehci, &ehci->caps->hcc_params);
-	if (HCC_64BIT_ADDR(hcc_params)) {
-		ehci_writel(ehci, 0, &ehci->regs->segment);
-#if 0
-// this is deeply broken on almost all architectures
-		if (!dma_set_mask(hcd->self.controller, DMA_BIT_MASK(64)))
-			ehci_info(ehci, "enabled 64bit DMA\n");
-#endif
-	}
-
-
-	// Philips, Intel, and maybe others need CMD_RUN before the
-	// root hub will detect new devices (why?); NEC doesn't
-	ehci->command &= ~(CMD_LRESET|CMD_IAAD|CMD_PSE|CMD_ASE|CMD_RESET);
-	ehci->command |= CMD_RUN;
-	ehci_writel(ehci, ehci->command, &ehci->regs->command);
-	dbg_cmd (ehci, "init", ehci->command);
-
-	/*
-	 * Start, enabling full USB 2.0 functionality ... usb 1.1 devices
-	 * are explicitly handed to companion controller(s), so no TT is
-	 * involved with the root hub.  (Except where one is integrated,
-	 * and there's no companion controller unless maybe for USB OTG.)
-	 *
-	 * Turning on the CF flag will transfer ownership of all ports
-	 * from the companions to the EHCI controller.  If any of the
-	 * companions are in the middle of a port reset at the time, it
-	 * could cause trouble.  Write-locking ehci_cf_port_reset_rwsem
-	 * guarantees that no resets are in progress.  After we set CF,
-	 * a short delay lets the hardware catch up; new resets shouldn't
-	 * be started before the port switching actions could complete.
-	 */
-	down_write(&ehci_cf_port_reset_rwsem);
-	hcd->state = HC_STATE_RUNNING;
-	ehci_writel(ehci, FLAG_CF, &ehci->regs->configured_flag);
-	ehci_readl(ehci, &ehci->regs->command);	/* unblock posted writes */
-	msleep(5);
-	up_write(&ehci_cf_port_reset_rwsem);
-	ehci->last_periodic_enable = ktime_get_real();
-
-	temp = HC_VERSION(ehci_readl(ehci, &ehci->caps->hc_capbase));
-	ehci_info (ehci,
-		"USB %x.%x started, EHCI %x.%02x%s\n",
-		((ehci->sbrn & 0xf0)>>4), (ehci->sbrn & 0x0f),
-		temp >> 8, temp & 0xff,
-		ignore_oc ? ", overcurrent ignored" : "");
-
-	ehci_writel(ehci, INTR_MASK,
-		    &ehci->regs->intr_enable); /* Turn On Interrupts */
-
-	/* GRR this is run-once init(), being done every time the HC starts.
-	 * So long as they're part of class devices, we can't do it init()
-	 * since the class device isn't created that early.
-	 */
-	create_debug_files(ehci);
-	create_companion_file(ehci);
-
-	return 0;
-}
 
 /*-------------------------------------------------------------------------*/
 
@@ -1057,46 +952,7 @@ done:
 	return;
 }
 
-static void
-ehci_endpoint_reset(struct usb_hcd *hcd, struct usb_host_endpoint *ep)
-{
-	struct ehci_hcd		*ehci = hcd_to_ehci(hcd);
-	struct ehci_qh		*qh;
-	int			eptype = usb_endpoint_type(&ep->desc);
-	int			epnum = usb_endpoint_num(&ep->desc);
-	int			is_out = usb_endpoint_dir_out(&ep->desc);
-	unsigned long		flags;
 
-	if (eptype != USB_ENDPOINT_XFER_BULK && eptype != USB_ENDPOINT_XFER_INT)
-		return;
-
-	spin_lock_irqsave(&ehci->lock, flags);
-	qh = ep->hcpriv;
-
-	/* For Bulk and Interrupt endpoints we maintain the toggle state
-	 * in the hardware; the toggle bits in udev aren't used at all.
-	 * When an endpoint is reset by usb_clear_halt() we must reset
-	 * the toggle bit in the QH.
-	 */
-	if (qh) {
-		usb_settoggle(qh->dev, epnum, is_out, 0);
-		if (!list_empty(&qh->qtd_list)) {
-			WARN_ONCE(1, "clear_halt for a busy endpoint\n");
-		} else if (qh->qh_state == QH_STATE_LINKED ||
-				qh->qh_state == QH_STATE_COMPLETING) {
-
-			/* The toggle value in the QH can't be updated
-			 * while the QH is active.  Unlink it now;
-			 * re-linking will call qh_refresh().
-			 */
-			if (eptype == USB_ENDPOINT_XFER_BULK)
-				unlink_async(ehci, qh);
-			else
-				intr_deschedule(ehci, qh);
-		}
-	}
-	spin_unlock_irqrestore(&ehci->lock, flags);
-}
 
 static int ehci_get_frame (struct usb_hcd *hcd)
 {

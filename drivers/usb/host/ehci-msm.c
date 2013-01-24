@@ -153,7 +153,6 @@ static int usb_wakeup_phy(struct usb_hcd *hcd)
 
 static int usb_suspend_phy(struct usb_hcd *hcd)
 {
-	int ret;
 	struct msmusb_hcd *mhcd = hcd_to_mhcd(hcd);
 	struct msm_usb_host_platform_data *pdata = mhcd->pdata;
 
@@ -452,7 +451,6 @@ static void msm_hsusb_request_host(void *handle, int request)
 	struct usb_hcd *hcd = mhcd_to_hcd(mhcd);
 	struct msm_usb_host_platform_data *pdata = mhcd->pdata;
 	struct msm_otg *otg = container_of(mhcd->xceiv, struct msm_otg, otg);
-	struct usb_device *udev = hcd->self.root_hub;
 	struct device *dev = hcd->self.controller;
 
 	switch (request) {

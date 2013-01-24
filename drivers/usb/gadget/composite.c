@@ -829,8 +829,7 @@ composite_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 	u16				w_length = le16_to_cpu(ctrl->wLength);
 	struct usb_function		*f = NULL;
 	u8				endp;
-	int tmp = intf;
-	int id = 0;
+	
 
 
 	/* partial re-init of the response message; the function or the
