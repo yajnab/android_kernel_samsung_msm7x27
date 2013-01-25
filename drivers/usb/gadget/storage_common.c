@@ -544,10 +544,7 @@ static struct usb_string		fsg_strings[] = {
 	{}
 };
 
-static struct usb_gadget_strings	fsg_stringtab = {
-	.language	= 0x0409,		/* en-us */
-	.strings	= fsg_strings,
-};
+
 
 
  /*-------------------------------------------------------------------------*/

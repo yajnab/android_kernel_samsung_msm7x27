@@ -800,21 +800,7 @@ acm_unbind(struct usb_configuration *c, struct usb_function *f)
 	acmdata_unregister();
 }
 
-static struct usb_descriptor_header *
-acm_usb_find_decriptor(
-	struct usb_descriptor_header **src,
-	struct usb_descriptor_header **copy,
-	struct usb_descriptor_header *match
-)
-{
-	while (*src) {
-		if (*src == (void *) match)
-			return (void *)*copy;
-		src++;
-		copy++;
-	}
-	return NULL;
-}
+
 
 
 

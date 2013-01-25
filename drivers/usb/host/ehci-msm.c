@@ -153,7 +153,8 @@ static int usb_wakeup_phy(struct usb_hcd *hcd)
 
 static int usb_suspend_phy(struct usb_hcd *hcd)
 {
-	struct msmusb_hcd *mhcd = hcd_to_mhcd(hcd);
+	int ret;
+        struct msmusb_hcd *mhcd = hcd_to_mhcd(hcd);
 	struct msm_usb_host_platform_data *pdata = mhcd->pdata;
 
 	switch (PHY_TYPE(pdata->phy_info)) {
