@@ -522,8 +522,6 @@ static DEVICE_ATTR(info, S_IRUGO|S_IWUSR, show_info, NULL);
 static ssize_t store_whitelist(struct device *d,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-	int i;
-
 	switch (buf[0]) {
 	case 0x7F:
 #if 0	//1
@@ -550,7 +548,7 @@ static DEVICE_ATTR(whitelist, S_IRUGO|S_IWUSR, NULL, store_whitelist);
 static ssize_t store_power_down(struct device *d,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-	int i;
+	
 	char *after;
         unsigned long value = simple_strtoul(buf, &after, 10);
 
@@ -569,7 +567,7 @@ static DEVICE_ATTR(power_down, S_IRUGO|S_IWUSR, NULL, store_power_down);
 static ssize_t store_cpu_gov(struct device *d,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-	int i;
+	
 	char *after;
         unsigned long value = simple_strtoul(buf, &after, 10);
 
