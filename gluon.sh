@@ -51,6 +51,12 @@ $cyan
 echo "Cleaning"
 $violet
 make clean
+cd out
+rm kernel.zip
+cd ../
+cd output
+rm boot.img
+cd ../
 clear
 $cyan
 echo " Making config"
@@ -87,9 +93,9 @@ $cyan
 echo "Copying output files"
 $violet
 mv arch/arm/boot/zImage boot.img-zImage
-
+rm gluon_works/bootimage/unpack/boot.img-zImage	
 cp boot.img-zImage gluon_works/bootimage/unpack	
-rm boot.img-zImage
+
 
 find -name '*.ko' -exec cp -av {} $MODULES/ \;
 
@@ -119,8 +125,12 @@ rm -rf boot
 cd ../../
 $white
 echo "Making Flashable Zip"
+cp -avr gluon_works/flash/META-INF/ out/META-INF
+cp output/boot.img out/boot.img
 cd out
-zip kernel#$VERSION.zip ../gluon_works/flash/META-INF ../output/boot.img
+zip kernel.zip *
+rm -rf META-INF
+rm boot.img
 cd ../
 
 
