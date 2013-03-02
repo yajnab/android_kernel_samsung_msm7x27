@@ -128,7 +128,7 @@ echo "Making Flashable Zip"
 cp -avr gluon_works/flash/META-INF/ out/META-INF
 cp output/boot.img out/boot.img
 cd out
-zip kernel.zip *
+zip -r kernel.zip *
 rm -rf META-INF
 rm boot.img
 cd ../
