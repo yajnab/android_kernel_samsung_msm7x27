@@ -8,44 +8,46 @@ cyan='tput setaf 6'
 white='tput setaf 7'
 normal='tput sgr0'
 bold='setterm -bold'
-
+date="date"
+KERNEL_BUILD="Gluon_Kernel_Gingerbread-`date '+%Y-%m-%d---%H-%M'`" 
+echo $1 > VERSION	
+VERSION='cat VERSION'
 $yellow
 MODULES=./gluon_works/bootimage/boot/lib/modules
 TOOLCHAIN=../../../../../../arm-2011.03/bin/arm-none-eabi
 $blue
-echo " ========================================================================== "
-echo " **************************** GLUON KERNEL ******************************** "
-echo " ========================================================================== "
+echo " |========================================================================| "
+echo " |*************************** GLUON KERNEL *******************************| "
+echo " |========================================================================= "
 $cyan
-echo " ========================================================================== "
-echo " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Gluon Works ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ "
-echo " ========================================================================== "
+echo " |========================================================================| "
+echo " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Gluon Works ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| "
+echo " |========================================================================| "
 $red
-echo " ========================================================================== "
-echo " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DEVELOPER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ "
+echo " |========================================================================| "
+echo " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DEVELOPER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| "
 $cyan
-echo " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Yajnab %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% "
+echo " |%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Yajnab %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%| "
 $red
-echo " =============================XDA-DEVELOPERS=============================== "
-echo " ===========================Github.com/Yajnab ============================= "
-echo " ========================================================================== "
+echo " |=========================== XDA-DEVELOPERS =============================| "
+echo " |========================= Github.com/Yajnab ============================| "
+echo " |========================================================================| "
 $yellow
 $bold
-echo " ========================================================================== "
-echo " ========================= COMPILING GLUON KERNEL ========================= "
-echo " ========================================================================== "
+echo " |========================================================================| "
+echo " |======================== COMPILING GLUON KERNEL ========================| "
+echo " |========================================================================| "
 $normal
 
 
 if [ -n VERSION ]; then
 echo "Release version is 0"
 echo "0" > .version
-else
-echo "Release version is $VERSION"
+else 
+echo "Release version is $VERSION" 
 echo $VERSION > .version
-
+rm VERSION
 fi
-
 
 $cyan
 echo "Cleaning"
@@ -95,6 +97,7 @@ $violet
 mv arch/arm/boot/zImage boot.img-zImage
 rm gluon_works/bootimage/unpack/boot.img-zImage	
 cp boot.img-zImage gluon_works/bootimage/unpack	
+rm boot.img-zImage
 
 
 find -name '*.ko' -exec cp -av {} $MODULES/ \;
@@ -125,10 +128,12 @@ rm -rf boot
 cd ../../
 $white
 echo "Making Flashable Zip"
-cp -avr gluon_works/flash/META-INF/ out/META-INF
+rm -rf out
+mkdir out
+cp -avr gluon_works/flash/META-INF/ out/
 cp output/boot.img out/boot.img
 cd out
-zip -r kernel.zip *
+zip -r $KERNEL_BUILD.zip *
 rm -rf META-INF
 rm boot.img
 cd ../
@@ -138,36 +143,37 @@ cd ../
 $blue
 echo "Cleaning"
 $violet
-make clean
+make clean mrproper
 rm -rf gluon_works/bootimage/unpack
 rm -rf gluon_works/bootimage/output
 rm -rf gluon_works/bootimage/boot
 rm -rf gluon_works/bootimage/source_img
 clear
 $white
-echo " ============================= F.I.N.I.S.H ! =============================="
+echo " |============================ F.I.N.I.S.H ! =============================|"
 $red
-echo " ===========================Flash it and Enjoy============================= "
+echo " |==========================Flash it and Enjoy============================| "
 $blue
-echo " ===========Don't seek readymade goodies, try to make something new======== "
+echo " |==========Don't seek readymade goodies, try to make something new=======| "
 $cyan
-echo " ===============================Gluon Works================================ "
+echo " |==============================Gluon Works===============================| "
 $red
-echo " =================================Credits================================== "
-echo "~~~~~~~~~~~~~~~~~~~~~~~~Dr.Nachiketa Bandyopadhyay(My Father)~~~~~~~~~~~~~~ "
-echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~My Computer~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ "
-echo "~~~~~~~~~~~~~~~~~~~~~~~~~~Samsung Galaxy Fit(Beni)~~~~~~~~~~~~~~~~~~~~~~~~~ "
-echo "~~~~~~~~~~~~~~~~~~~~Darshana Chatterjee(My Most speacial friend)~~~~~~~~~~~ "
-echo "=========================================================================== "
+echo " |================================Credits=================================| "
+echo " |~~~~~~~~~~~~~~~~~~~~~~Dr.Nachiketa Bandyopadhyay(My Father)~~~~~~~~~~~~~| "
+echo " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~My Computer~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| "
+echo " |~~~~~~~~~~~~~~~~~~~~~~~~~Samsung Galaxy Fit(Beni)~~~~~~~~~~~~~~~~~~~~~~~| "
+echo " |~~~~~~~~~~~~~~~~~~Darshana Chatterjee(My Most speacial friend)~~~~~~~~~~| "
+echo " |========================================================================| "
 $violet
-echo "**********************Vishwanath Patil(He taught me all)******************* "
-echo "****************************Aditya Patange(Adipat)************************* "
-echo "*************************Sarthak Acharya(sakindia123)********************** "
-echo "******************************Teguh Soribin(tjstyle)*********************** "
-echo "******************************Yanuar Harry(squadzone)********************** "
-echo "***********************************faux123********************************* "
-echo "******************************Linux Torvalds(torvalds)********************* "
-echo "=========================================================================== "
+echo " |========================================================================| "
+echo " |********************Vishwanath Patil(He taught me all)******************| "
+echo " |****************************Aditya Patange(Adipat)**********************| "
+echo " |************************Sarthak Acharya(sakindia123)********************| "
+echo " |****************************Teguh Soribin(tjstyle)**********************| "
+echo " |****************************Yanuar Harry(squadzone)*********************| "
+echo " |*********************************faux123********************************| "
+echo " |****************************Linux Torvalds(torvalds)********************| "
+echo " |========================================================================| "
 
 $normal
 
