@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -9,16 +9,15 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
  */
 
 #include "vcd_ddl_shared_mem.h"
 
 #define VIDC_SM_EXTENDED_DECODE_STATUS_ADDR    0x0000
+#define VIDC_SM_EXT_DEC_STATUS_RESOLUTION_CHANGE_BMSK 0x1
+#define VIDC_SM_EXT_DEC_STATUS_RESOLUTION_CHANGE_SHFT 0x0
+#define VIDC_SM_EXT_DEC_STATUS_MORE_FIELD_NEEDED_BMSK 0x4
+#define VIDC_SM_EXT_DEC_STATUS_MORE_FIELD_NEEDED_SHFT 0x2
 
 #define VIDC_SM_SET_FRAME_TAG_ADDR             0x0004
 #define VIDC_SM_GET_FRAME_TAG_TOP_ADDR         0x0008
@@ -46,16 +45,48 @@
 #define VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_PROFILE_SHFT      0
 
 #define VIDC_SM_DISP_PIC_FRAME_TYPE_ADDR                    0x00c0
-#define VIDC_SM_DISP_PIC_FRAME_TYPE_BMSK                    0x00000003
+#define VIDC_SM_DISP_PIC_FRAME_TYPE_BMSK                    0x0000003f
 #define VIDC_SM_DISP_PIC_FRAME_TYPE_SHFT                    0
 
 #define VIDC_SM_FREE_LUMA_DPB_ADDR                          0x00c4
 #define VIDC_SM_FREE_LUMA_DPB_BMSK                          0xffffffff
 #define VIDC_SM_FREE_LUMA_DPB_SHFT                          0
 
+#define VIDC_SM_FREE_LUMA_DPB_DEC_ORDER_ADDR                0x00fc
+#define VIDC_SM_FREE_LUMA_DPB_DEC_ORDER_BMSK                0xffffffff
+#define VIDC_SM_FREE_LUMA_DPB_DEC_ORDER_SHFT                0
+
+#define VIDC_SM_DEC_ORDER_WIDTH_ADDR                        0x00e8
+#define VIDC_SM_DEC_ORDER_WIDTH_BMSK                        0xffffffff
+#define VIDC_SM_DEC_ORDER_WIDTH_SHFT                        0
+
+#define VIDC_SM_DEC_ORDER_HEIGHT_ADDR                       0x00ec
+#define VIDC_SM_DEC_ORDER_HEIGHT_BMSK                       0xffffffff
+#define VIDC_SM_DEC_ORDER_HEIGHT_SHFT                       0
+
+#define VIDC_SM_DEC_CROP_INFO1_ADDR                         0x00f4
+#define VIDC_SM_DEC_CROP_INFO1_RIGHT_OFFSET_BMSK            0xffff0000
+#define VIDC_SM_DEC_CROP_INFO1_RIGHT_OFFSET_SHFT            16
+#define VIDC_SM_DEC_CROP_INFO1_LEFT_OFFSET_BMSK             0x0000ffff
+#define VIDC_SM_DEC_CROP_INFO1_LEFT_OFFSET_SHFT             0
+
+#define VIDC_SM_DEC_CROP_INFO2_ADDR                         0x00f8
+#define VIDC_SM_DEC_CROP_INFO2_BOTTOM_OFFSET_BMSK           0xffff0000
+#define VIDC_SM_DEC_CROP_INFO2_BOTTOM_OFFSET_SHFT           16
+#define VIDC_SM_DEC_CROP_INFO2_TOP_OFFSET_BMSK              0x0000ffff
+#define VIDC_SM_DEC_CROP_INFO2_TOP_OFFSET_SHFT              0
+
+#define VIDC_SM_IDR_DECODING_ONLY_ADDR                      0x0108
+#define VIDC_SM_IDR_DECODING_ONLY_BMSK                      0x00000001
+#define VIDC_SM_IDR_DECODING_ONLY_SHIFT                     0
+
 #define VIDC_SM_ENC_EXT_CTRL_ADDR                    0x0028
 #define VIDC_SM_ENC_EXT_CTRL_VBV_BUFFER_SIZE_BMSK    0xffff0000
 #define VIDC_SM_ENC_EXT_CTRL_VBV_BUFFER_SIZE_SHFT    16
+#define VIDC_SM_ENC_EXT_CTRL_H263_CPCFC_ENABLE_BMSK  0x80
+#define VIDC_SM_ENC_EXT_CTRL_H263_CPCFC_ENABLE_SHFT  7
+#define VIDC_SM_ENC_EXT_CTRL_SPS_PPS_CONTROL_BMSK    0X100
+#define VIDC_SM_ENC_EXT_CTRL_SPS_PPS_CONTROL_SHFT    8
 #define VIDC_SM_ENC_EXT_CTRL_SEQ_HDR_CTRL_BMSK       0x8
 #define VIDC_SM_ENC_EXT_CTRL_SEQ_HDR_CTRL_SHFT       3
 #define VIDC_SM_ENC_EXT_CTRL_FRAME_SKIP_ENABLE_BMSK  0x6
@@ -125,6 +156,25 @@
 #define VIDC_SM_NEW_I_PERIOD_VALUE_BMASK       0xffffffff
 #define VIDC_SM_NEW_I_PERIOD_VALUE_SHFT        0
 
+#define VIDC_SM_BATCH_INPUT_ADDR                                  0x00a4
+#define VIDC_SM_BATCH_INPUT_ADDR_VALUE_BMSK                       0xffffffff
+#define VIDC_SM_BATCH_INPUT_ADDRL_VALUE_SHFT                      0
+#define VIDC_SM_BATCH_OUTPUT_ADDR                                 0x00a8
+#define VIDC_SM_BATCH_OUTPUT_ADDR_VALUE_BMSK                      0xffffffff
+#define VIDC_SM_BATCH_OUTPUT_ADDR_VALUE_SHFT                      0
+#define VIDC_SM_BATCH_OUTPUT_SIZE_ADDR                            0x00ac
+#define VIDC_SM_BATCH_OUTPUT_SIZE_VALUE_BMSK                      0xffffffff
+#define VIDC_SM_BATCH_OUTPUT_SIZE_VALUE_SHFT                      0
+#define VIDC_SM_ENC_SLICE_BATCH_INT_CTRL_ADDR                     0x01c8
+#define VIDC_SM_ENC_SLICE_BATCH_INT_CTRL_VALUE_BMSK               0x1
+#define VIDC_SM_ENC_SLICE_BATCH_INT_CTRL_VALUE_SHFT               0
+#define VIDC_SM_ENC_NUM_OF_SLICE_ADDR                             0x01cc
+#define VIDC_SM_ENC_NUM_OF_SLICE_VALUE_BMSK                       0xffffffff
+#define VIDC_SM_ENC_NUM_OF_SLICE_VALUE_SHFT                       0
+#define VIDC_SM_ENC_NUM_OF_SLICE_COMP_ADDR                        0x01d0
+#define VIDC_SM_ENC_NUM_OF_SLICE_COMP_VALUE_BMSK                  0xffffffff
+#define VIDC_SM_ENC_NUM_OF_SLICE_COMP_VALUE_SHFT                  0
+
 
 #define VIDC_SM_ALLOCATED_LUMA_DPB_SIZE_ADDR               0x0064
 #define VIDC_SM_ALLOCATED_CHROMA_DPB_SIZE_ADDR             0x0068
@@ -153,6 +203,14 @@
 #define VIDC_SM_METADATA_ENABLE_QP_BMSK              0x1
 #define VIDC_SM_METADATA_ENABLE_QP_SHFT              0
 
+#define VIDC_SM_ASPECT_RATIO_INFO_ADDR               0x00c8
+#define VIDC_SM_MPEG4_ASPECT_RATIO_INFO_BMSK         0xf
+#define VIDC_SM_MPEG4_ASPECT_RATIO_INFO_SHFT         0x0
+#define VIDC_SM_EXTENDED_PAR_ADDR                    0x00cc
+#define VIDC_SM_EXTENDED_PAR_WIDTH_BMSK              0xffff0000
+#define VIDC_SM_EXTENDED_PAR_WIDTH_SHFT              0xf
+#define VIDC_SM_EXTENDED_PAR_HEIGHT_BMSK             0x0000ffff
+#define VIDC_SM_EXTENDED_PAR_HEIGHT_SHFT             0x0
 
 #define VIDC_SM_METADATA_STATUS_ADDR         0x003c
 #define VIDC_SM_METADATA_STATUS_STATUS_BMSK  0x1
@@ -166,6 +224,32 @@
 #define VIDC_SM_PUT_EXTRADATA_PUT_SHFT  0
 
 #define VIDC_SM_EXTRADATA_ADDR_ADDR     0x004c
+
+#define VIDC_SM_CHROMA_ADDR_CHANGE_ADDR   0x0148
+#define VIDC_SM_CHROMA_ADDR_CHANGE_BMASK  0x00000001
+#define VIDC_SM_CHROMA_ADDR_CHANGE_SHFT   0
+
+#define VIDC_SM_ERROR_CONCEALMENT_CONFIG_ADDR   0x0154
+
+#define VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTER_SLICE_BMSK  0x0c
+#define VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTER_SLICE_SHFT 2
+#define VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTRA_SLICE_BMSK 0X02
+#define VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTRA_SLICE_SHFT 1
+#define VIDC_SM_ERROR_CONCEALMENT_CONFIG_CONCEAL_ENABLE_BMSK  0x01
+#define VIDC_SM_ERROR_CONCEALMENT_CONFIG_CONCEAL_ENABLE_SHFT   0
+
+#define VIDC_SM_SEI_ENABLE_ADDR                     0x0180
+#define VIDC_SM_SEI_ENABLE_RECOVERY_POINT_SEI_BMSK  0x00000001
+#define VIDC_SM_SEI_ENABLE_RECOVERY_POINT_SEI_SHFT  0
+
+#define VIDC_SM_NUM_STUFF_BYTES_CONSUME_ADDR    0X01ac
+
+#define VIDC_SM_TIMEOUT_VALUE_ADDR        0x0158
+#define VIDC_SM_TIMEOUT_VALUE_BMSK        0xffffffff
+#define VIDC_SM_TIMEOUT_VALUE_SHFT        0
+
+#define VIDC_SM_ENC_EXT_CTRL_CLOSED_GOP_ENABLE_BMSK	0x40
+#define VIDC_SM_ENC_EXT_CTRL_CLOSED_GOP_ENABLE_SHFT	6
 
 #define DDL_MEM_WRITE_32(base, offset, val) ddl_mem_write_32(\
 	(u32 *) ((u8 *) (base)->align_virtual_addr + (offset)), (val))
@@ -185,10 +269,21 @@ static u32 ddl_mem_read_32(u32 *addr)
 }
 
 void vidc_sm_get_extended_decode_status(struct ddl_buf_addr *shared_mem,
-	u32 *pn_decode_status)
+	u32 *more_field_needed,
+	u32 *resl_change)
 {
-	*pn_decode_status = DDL_MEM_READ_32(shared_mem,
+	u32 decode_status = DDL_MEM_READ_32(shared_mem,
 					VIDC_SM_EXTENDED_DECODE_STATUS_ADDR);
+	if (more_field_needed)
+		*more_field_needed =
+				VIDC_GETFIELD(decode_status,
+				VIDC_SM_EXT_DEC_STATUS_MORE_FIELD_NEEDED_BMSK,
+				VIDC_SM_EXT_DEC_STATUS_MORE_FIELD_NEEDED_SHFT);
+	if (resl_change)
+		*resl_change =
+				VIDC_GETFIELD(decode_status,
+				VIDC_SM_EXT_DEC_STATUS_RESOLUTION_CHANGE_BMSK,
+				VIDC_SM_EXT_DEC_STATUS_RESOLUTION_CHANGE_SHFT);
 }
 
 void vidc_sm_set_frame_tag(struct ddl_buf_addr *shared_mem,
@@ -257,10 +352,51 @@ void vidc_sm_get_available_luma_dpb_address(struct ddl_buf_addr
 		VIDC_SM_FREE_LUMA_DPB_ADDR);
 }
 
+void vidc_sm_get_available_luma_dpb_dec_order_address(
+	struct ddl_buf_addr	*shared_mem,
+	u32 *pn_free_luma_dpb_address)
+{
+	*pn_free_luma_dpb_address = DDL_MEM_READ_32(shared_mem,
+		VIDC_SM_FREE_LUMA_DPB_DEC_ORDER_ADDR);
+}
+
+void vidc_sm_get_dec_order_resl(
+	struct ddl_buf_addr *shared_mem, u32 *width, u32 *height)
+{
+	*width = DDL_MEM_READ_32(shared_mem,
+			VIDC_SM_DEC_ORDER_WIDTH_ADDR);
+	*height = DDL_MEM_READ_32(shared_mem,
+			VIDC_SM_DEC_ORDER_HEIGHT_ADDR);
+}
+
+void vidc_sm_get_dec_order_crop_info(
+	struct ddl_buf_addr *shared_mem, u32 *left,
+	u32 *right, u32 *top, u32 *bottom)
+{
+	u32 crop_data;
+	crop_data = DDL_MEM_READ_32(shared_mem,
+		VIDC_SM_DEC_CROP_INFO1_ADDR);
+	*left = VIDC_GETFIELD(crop_data,
+		VIDC_SM_DEC_CROP_INFO1_LEFT_OFFSET_BMSK,
+		VIDC_SM_DEC_CROP_INFO1_LEFT_OFFSET_SHFT);
+	*right = VIDC_GETFIELD(crop_data,
+		VIDC_SM_DEC_CROP_INFO1_RIGHT_OFFSET_BMSK,
+		VIDC_SM_DEC_CROP_INFO1_RIGHT_OFFSET_SHFT);
+	crop_data = DDL_MEM_READ_32(shared_mem,
+		VIDC_SM_DEC_CROP_INFO2_ADDR);
+	*top = VIDC_GETFIELD(crop_data,
+		VIDC_SM_DEC_CROP_INFO2_TOP_OFFSET_BMSK,
+		VIDC_SM_DEC_CROP_INFO2_TOP_OFFSET_SHFT);
+	*bottom = VIDC_GETFIELD(crop_data,
+		VIDC_SM_DEC_CROP_INFO2_BOTTOM_OFFSET_BMSK,
+		VIDC_SM_DEC_CROP_INFO2_BOTTOM_OFFSET_SHFT);
+}
+
 void vidc_sm_set_extended_encoder_control(struct ddl_buf_addr
 	*shared_mem, u32 hec_enable,
 	enum VIDC_SM_frame_skip frame_skip_mode,
-	u32 seq_hdr_in_band, u32 vbv_buffer_size)
+	u32 seq_hdr_in_band, u32 vbv_buffer_size, u32 cpcfc_enable,
+	u32 sps_pps_control, u32 closed_gop_enable)
 {
 	u32 enc_ctrl;
 
@@ -275,7 +411,16 @@ void vidc_sm_set_extended_encoder_control(struct ddl_buf_addr
 			VIDC_SM_ENC_EXT_CTRL_SEQ_HDR_CTRL_BMSK) |
 			VIDC_SETFIELD(vbv_buffer_size,
 			VIDC_SM_ENC_EXT_CTRL_VBV_BUFFER_SIZE_SHFT,
-			VIDC_SM_ENC_EXT_CTRL_VBV_BUFFER_SIZE_BMSK);
+			VIDC_SM_ENC_EXT_CTRL_VBV_BUFFER_SIZE_BMSK) |
+			VIDC_SETFIELD((cpcfc_enable) ? 1 : 0,
+			VIDC_SM_ENC_EXT_CTRL_H263_CPCFC_ENABLE_SHFT,
+			VIDC_SM_ENC_EXT_CTRL_H263_CPCFC_ENABLE_BMSK) |
+			VIDC_SETFIELD((sps_pps_control) ? 1 : 0,
+			VIDC_SM_ENC_EXT_CTRL_SPS_PPS_CONTROL_SHFT,
+			VIDC_SM_ENC_EXT_CTRL_SPS_PPS_CONTROL_BMSK) |
+			VIDC_SETFIELD(closed_gop_enable,
+			VIDC_SM_ENC_EXT_CTRL_CLOSED_GOP_ENABLE_SHFT,
+			VIDC_SM_ENC_EXT_CTRL_CLOSED_GOP_ENABLE_BMSK);
 	DDL_MEM_WRITE_32(shared_mem, VIDC_SM_ENC_EXT_CTRL_ADDR, enc_ctrl);
 }
 
@@ -418,6 +563,16 @@ void vidc_sm_get_min_yc_dpb_sizes(struct ddl_buf_addr *shared_mem,
 		VIDC_SM_MIN_CHROMA_DPB_SIZE_ADDR);
 }
 
+void vidc_sm_set_concealment_color(struct ddl_buf_addr *shared_mem,
+	u32 conceal_ycolor, u32 conceal_ccolor)
+{
+	u32 conceal_color;
+
+	conceal_color = (((conceal_ycolor << 8) & 0xff00) |
+		(conceal_ccolor & 0xff));
+	DDL_MEM_WRITE_32(shared_mem, 0x00f0, conceal_color);
+}
+
 void vidc_sm_set_metadata_enable(struct ddl_buf_addr *shared_mem,
 	u32 extradata_enable, u32 qp_enable, u32 concealed_mb_enable,
 	u32 vc1Param_enable, u32 sei_nal_enable, u32 vui_enable,
@@ -515,18 +670,26 @@ void vidc_sm_set_pand_b_frame_qp(struct ddl_buf_addr *shared_mem,
 
 
 void vidc_sm_get_profile_info(struct ddl_buf_addr *shared_mem,
-	u32 *pn_disp_profile_info, u32 *pn_disp_level_info)
+	struct ddl_profile_info_type *ddl_profile_info)
 {
 	u32 disp_pic_profile;
 
 	disp_pic_profile = DDL_MEM_READ_32(shared_mem,
-				VIDC_SM_DISP_PIC_PROFILE_ADDR);
-	*pn_disp_profile_info = VIDC_GETFIELD(disp_pic_profile,
-			VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_PROFILE_BMASK,
-			VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_PROFILE_SHFT);
-	*pn_disp_level_info = VIDC_GETFIELD(disp_pic_profile,
-			VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_LEVEL_BMASK,
-			VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_LEVEL_SHFT);
+		VIDC_SM_DISP_PIC_PROFILE_ADDR);
+	ddl_profile_info->bit_depth_chroma_minus8 =
+		(disp_pic_profile  & 0x00380000) >> 19;
+	ddl_profile_info->bit_depth_luma_minus8 =
+		(disp_pic_profile & 0x00070000) >> 16;
+	ddl_profile_info->pic_profile = VIDC_GETFIELD(
+		disp_pic_profile,
+		VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_PROFILE_BMASK,
+		VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_PROFILE_SHFT);
+	ddl_profile_info->pic_level = VIDC_GETFIELD(
+		disp_pic_profile,
+		VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_LEVEL_BMASK,
+		VIDC_SM_DISP_PIC_PROFILE_DISP_PIC_LEVEL_SHFT);
+	ddl_profile_info->chroma_format_idc =
+		(disp_pic_profile & 0x60) >> 5;
 }
 
 void vidc_sm_set_encoder_new_bit_rate(struct ddl_buf_addr *shared_mem,
@@ -554,4 +717,160 @@ void vidc_sm_set_encoder_init_rc_value(struct ddl_buf_addr *shared_mem,
 {
 	DDL_MEM_WRITE_32(shared_mem, 0x011C, new_rc_value);
 
+}
+void vidc_sm_set_idr_decode_only(struct ddl_buf_addr *shared_mem,
+	u32 enable)
+{
+	u32 idr_decode_only = VIDC_SETFIELD((enable) ? 1 : 0,
+			VIDC_SM_IDR_DECODING_ONLY_SHIFT,
+			VIDC_SM_IDR_DECODING_ONLY_BMSK
+			);
+	DDL_MEM_WRITE_32(shared_mem, VIDC_SM_IDR_DECODING_ONLY_ADDR,
+			idr_decode_only);
+}
+
+void vidc_sm_set_chroma_addr_change(struct ddl_buf_addr *shared_mem,
+	u32 addr_change)
+{
+	u32 chroma_addr_change = VIDC_SETFIELD((addr_change) ? 1 : 0,
+					VIDC_SM_CHROMA_ADDR_CHANGE_SHFT,
+					VIDC_SM_CHROMA_ADDR_CHANGE_BMASK);
+	DDL_MEM_WRITE_32(shared_mem, VIDC_SM_CHROMA_ADDR_CHANGE_ADDR,
+					 chroma_addr_change);
+
+}
+
+void vidc_sm_set_mpeg4_profile_override(struct ddl_buf_addr *shared_mem,
+	enum vidc_sm_mpeg4_profileinfo profile_info)
+{
+	u32 profile_enforce = 0;
+	if (shared_mem != NULL) {
+		profile_enforce = 1;
+		switch (profile_info) {
+		case VIDC_SM_PROFILE_INFO_ASP:
+			profile_enforce |= 4;
+			break;
+		case VIDC_SM_PROFILE_INFO_SP:
+			profile_enforce |= 2;
+			break;
+		case VIDC_SM_PROFILE_INFO_DISABLE:
+		default:
+			profile_enforce = 0;
+			break;
+		}
+		DDL_MEM_WRITE_32(shared_mem, 0x15c, profile_enforce);
+	}
+}
+void vidc_sm_set_decoder_sei_enable(struct ddl_buf_addr *shared_mem,
+	u32 sei_enable)
+{
+	DDL_MEM_WRITE_32(shared_mem, VIDC_SM_SEI_ENABLE_ADDR, sei_enable);
+}
+
+void vidc_sm_get_decoder_sei_enable(struct ddl_buf_addr *shared_mem,
+	u32 *sei_enable)
+{
+	*sei_enable = DDL_MEM_READ_32(shared_mem, VIDC_SM_SEI_ENABLE_ADDR);
+}
+
+void vidc_sm_set_error_concealment_config(struct ddl_buf_addr *shared_mem,
+	u32 inter_slice, u32 intra_slice, u32 conceal_config_enable)
+{
+	u32 error_conceal_config = 0;
+
+	error_conceal_config = VIDC_SETFIELD(inter_slice,
+			VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTER_SLICE_SHFT,
+			VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTER_SLICE_BMSK);
+
+	error_conceal_config |= VIDC_SETFIELD(intra_slice,
+			VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTRA_SLICE_SHFT,
+			VIDC_SM_ERROR_CONCEALMENT_CONFIG_INTRA_SLICE_BMSK);
+
+	error_conceal_config |= VIDC_SETFIELD(conceal_config_enable,
+			VIDC_SM_ERROR_CONCEALMENT_CONFIG_CONCEAL_ENABLE_SHFT,
+			VIDC_SM_ERROR_CONCEALMENT_CONFIG_CONCEAL_ENABLE_BMSK);
+
+	DDL_MEM_WRITE_32(shared_mem, VIDC_SM_ERROR_CONCEALMENT_CONFIG_ADDR,
+			error_conceal_config);
+}
+
+void vidc_sm_set_decoder_stuff_bytes_consumption(
+	struct ddl_buf_addr *shared_mem,
+	enum vidc_sm_num_stuff_bytes_consume_info consume_info)
+{
+	DDL_MEM_WRITE_32(shared_mem, VIDC_SM_NUM_STUFF_BYTES_CONSUME_ADDR,
+	consume_info);
+}
+
+void vidc_sm_set_video_core_timeout_value(struct ddl_buf_addr *shared_mem,
+        u32 timeout)
+{
+    DDL_MEM_WRITE_32(shared_mem, VIDC_SM_TIMEOUT_VALUE_ADDR,
+        timeout);
+}
+
+void vidc_sm_get_aspect_ratio_info(struct ddl_buf_addr *shared_mem,
+	struct vcd_aspect_ratio *aspect_ratio_info)
+{
+	u32 extended_par_info = 0;
+	aspect_ratio_info->aspect_ratio = DDL_MEM_READ_32(shared_mem,
+				VIDC_SM_ASPECT_RATIO_INFO_ADDR);
+
+	if (aspect_ratio_info->aspect_ratio == 0x0f) {
+		extended_par_info = DDL_MEM_READ_32(shared_mem,
+			VIDC_SM_EXTENDED_PAR_ADDR);
+		aspect_ratio_info->extended_par_width =
+			VIDC_GETFIELD(extended_par_info,
+			VIDC_SM_EXTENDED_PAR_WIDTH_BMSK,
+			VIDC_SM_EXTENDED_PAR_WIDTH_SHFT);
+		aspect_ratio_info->extended_par_height =
+			VIDC_GETFIELD(extended_par_info,
+			VIDC_SM_EXTENDED_PAR_HEIGHT_BMSK,
+			VIDC_SM_EXTENDED_PAR_HEIGHT_SHFT);
+	}
+}
+
+void vidc_sm_set_encoder_slice_batch_int_ctrl(struct ddl_buf_addr *shared_mem,
+        u32 slice_batch_int_enable)
+{
+    u32 slice_batch_int_ctrl = VIDC_SETFIELD((slice_batch_int_enable) ?
+            1 : 0,
+            VIDC_SM_ENC_EXT_CTRL_HEC_ENABLE_SHFT,
+            VIDC_SM_ENC_EXT_CTRL_HEC_ENABLE_BMSK);
+    DDL_MEM_WRITE_32(shared_mem,
+            VIDC_SM_ENC_SLICE_BATCH_INT_CTRL_ADDR,
+            slice_batch_int_ctrl);
+}
+
+void vidc_sm_get_num_slices_comp(struct ddl_buf_addr *shared_mem,
+        u32 *num_slices_comp)
+{
+    *num_slices_comp = DDL_MEM_READ_32(shared_mem,
+            VIDC_SM_ENC_NUM_OF_SLICE_COMP_ADDR);
+}
+
+void vidc_sm_set_encoder_batch_config(struct ddl_buf_addr *shared_mem,
+        u32 num_slices,
+        u32 input_addr, u32 output_addr,
+        u32 output_buffer_size)
+{
+    DDL_MEM_WRITE_32(shared_mem,
+            VIDC_SM_ENC_NUM_OF_SLICE_ADDR,
+            num_slices);
+    DDL_MEM_WRITE_32(shared_mem,
+            VIDC_SM_BATCH_INPUT_ADDR,
+            input_addr);
+    DDL_MEM_WRITE_32(shared_mem,
+            VIDC_SM_BATCH_OUTPUT_ADDR,
+            output_addr);
+    DDL_MEM_WRITE_32(shared_mem,
+            VIDC_SM_BATCH_OUTPUT_SIZE_ADDR,
+            output_buffer_size);
+}
+
+void vidc_sm_get_encoder_batch_output_size(struct ddl_buf_addr *shared_mem,
+        u32 *output_buffer_size)
+{
+    *output_buffer_size = DDL_MEM_READ_32(shared_mem,
+            VIDC_SM_BATCH_OUTPUT_SIZE_ADDR);
 }

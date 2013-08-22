@@ -1,4 +1,4 @@
-/* Copyright (c) 2009-2010, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2009-2011, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -8,11 +8,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
  */
 
 #include <linux/delay.h>
@@ -36,7 +31,7 @@ static struct pwm_device *bl_pwm1;
 
 #define PWM_FREQ_HZ 300
 #define PWM_PERIOD_USEC (USEC_PER_SEC / PWM_FREQ_HZ)
-#define PWM_LEVEL 15
+#define PWM_LEVEL 100
 #define PWM_DUTY_LEVEL (PWM_PERIOD_USEC / PWM_LEVEL)
 #endif
 
@@ -53,12 +48,12 @@ static struct lcdc_samsung_data *dd;
 
 static void lcdc_samsung_panel_set_backlight(struct msm_fb_data_type *mfd)
 {
+#ifdef CONFIG_PMIC8058_PWM
 	int bl_level;
 	int ret;
 
 	bl_level = mfd->bl_level;
 
-#ifdef CONFIG_PMIC8058_PWM
 	if (bl_pwm0) {
 		ret = pwm_config(bl_pwm0, PWM_DUTY_LEVEL * bl_level,
 			PWM_PERIOD_USEC);
@@ -161,7 +156,7 @@ static int __devinit samsung_probe(struct platform_device *pdev)
 		bl_pwm1 = NULL;
 	}
 
-	printk(KERN_INFO "samsung_probe: bl_pwm0=%p LPG_chan0=%d "
+	pr_debug("samsung_probe: bl_pwm0=%p LPG_chan0=%d "
 			"bl_pwm1=%p LPG_chan1=%d\n",
 			bl_pwm0, (int)dd->pdata->gpio_num[0],
 			bl_pwm1, (int)dd->pdata->gpio_num[1]
@@ -227,10 +222,8 @@ static int __init lcdc_samsung_panel_init(void)
 	int ret;
 	struct msm_panel_info *pinfo;
 
-#ifdef CONFIG_FB_MSM_LCDC_AUTO_DETECT
 	if (msm_fb_detect_client("lcdc_samsung_wsvga"))
 		return 0;
-#endif
 
 	ret = platform_driver_register(&this_driver);
 	if (ret)
@@ -254,7 +247,7 @@ static int __init lcdc_samsung_panel_init(void)
 	pinfo->bpp = 18;
 	pinfo->fb_num = 2;
 	pinfo->clk_rate = 43192000;
-	pinfo->bl_max = 15;
+	pinfo->bl_max = PWM_LEVEL;
 	pinfo->bl_min = 1;
 
 	pinfo->lcdc.h_back_porch = 80;

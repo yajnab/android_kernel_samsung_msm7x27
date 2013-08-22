@@ -1,4 +1,4 @@
-/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -9,16 +9,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
  */
 
-#include "vidc_type.h"
+#include <media/msm/vidc_type.h>
 #include "vcd_ddl_utils.h"
 #include "vcd_ddl_metadata.h"
+#include "vcd_res_tracker_api.h"
 
 u32 ddl_device_init(struct ddl_init_config *ddl_init_config,
 		    void *client_data)
@@ -46,9 +42,22 @@ u32 ddl_device_init(struct ddl_init_config *ddl_init_config,
 	}
 
 	DDL_MEMSET(ddl_context, 0, sizeof(struct ddl_context));
-
 	DDL_BUSY(ddl_context);
 
+	if (res_trk_get_enable_ion()) {
+		VIDC_LOGERR_STRING("ddl_dev_init: ION framework enabled");
+		ddl_context->video_ion_client  =
+			res_trk_get_ion_client();
+		if (!ddl_context->video_ion_client) {
+			VIDC_LOGERR_STRING("ION client create failed");
+			return VCD_ERR_ILLEGAL_OP;
+		}
+	}
+	ddl_context->memtype = res_trk_get_mem_type();
+	if (ddl_context->memtype == -1) {
+		VIDC_LOGERR_STRING("ddl_dev_init:Invalid Memtype");
+		return VCD_ERR_ILLEGAL_PARM;
+	}
 	ddl_context->ddl_callback = ddl_init_config->ddl_callback;
 	ddl_context->interrupt_clr = ddl_init_config->interrupt_clr;
 	ddl_context->core_virtual_base_addr =
@@ -161,7 +170,7 @@ u32 ddl_device_release(void *client_data)
 
 	VIDC_LOG_STRING("FW_ENDDONE");
 	ddl_release_context_buffers(ddl_context);
-
+	ddl_context->video_ion_client = NULL;
 	DDL_IDLE(ddl_context);
 
 	return VCD_S_SUCCESS;
@@ -295,7 +304,7 @@ u32 ddl_encode_start(u32 *ddl_handle, void *client_data)
 			       DDL_ENC_SEQHEADER_SIZE,
 			       DDL_LINEAR_BUFFER_ALIGN_BYTES);
 		if (!encoder->seq_header.virtual_base_addr) {
-			ddl_pmem_free(encoder->enc_dpb_addr);
+			ddl_pmem_free(&encoder->enc_dpb_addr);
 			VIDC_LOGERR_STRING
 			    ("ddl_enc_start:Seq_hdr_alloc_failed");
 			return VCD_ERR_ALLOC_FAIL;
@@ -392,10 +401,6 @@ u32 ddl_decode_frame(u32 *ddl_handle,
 	    (struct ddl_client_context *)ddl_handle;
 	struct ddl_context *ddl_context = ddl_get_context();
 
-#ifdef CORE_TIMING_INFO
-	ddl_get_core_start_time(0);
-#endif
-
 	if (!DDL_IS_INITIALIZED(ddl_context)) {
 		VIDC_LOGERR_STRING("ddl_dec_frame:Not_inited");
 		return VCD_ERR_ILLEGAL_OP;
@@ -461,9 +466,8 @@ u32 ddl_encode_frame(u32 *ddl_handle,
 	    (struct ddl_client_context *)ddl_handle;
 	struct ddl_context *ddl_context = ddl_get_context();
 
-#ifdef CORE_TIMING_INFO
-	ddl_get_core_start_time(1);
-#endif
+	if (vidc_msg_timing)
+		ddl_set_core_start_time(__func__, ENC_OP_TIME);
 
 	if (!DDL_IS_INITIALIZED(ddl_context)) {
 		VIDC_LOGERR_STRING("ddl_enc_frame:Not_inited");
@@ -479,8 +483,7 @@ u32 ddl_encode_frame(u32 *ddl_handle,
 	}
 	if (!input_frame ||
 	    !input_frame->vcd_frm.physical ||
-	    ddl->codec_data.encoder.input_buf_req.sz !=
-	    input_frame->vcd_frm.data_len) {
+	    !input_frame->vcd_frm.data_len) {
 		VIDC_LOGERR_STRING("ddl_enc_frame:Bad_input_params");
 		return VCD_ERR_ILLEGAL_PARM;
 	}
@@ -530,9 +533,10 @@ u32 ddl_decode_end(u32 *ddl_handle, void *client_data)
 
 	ddl_context = ddl_get_context();
 
-#ifdef CORE_TIMING_INFO
-	ddl_reset_time_variables(0);
-#endif
+	if (vidc_msg_timing) {
+		ddl_reset_core_time_variables(DEC_OP_TIME);
+		ddl_reset_core_time_variables(DEC_IP_TIME);
+	}
 
 	if (!DDL_IS_INITIALIZED(ddl_context)) {
 		VIDC_LOGERR_STRING("ddl_dec_end:Not_inited");
@@ -571,9 +575,8 @@ u32 ddl_encode_end(u32 *ddl_handle, void *client_data)
 
 	ddl_context = ddl_get_context();
 
-#ifdef CORE_TIMING_INFO
-	ddl_reset_time_variables(1);
-#endif
+	if (vidc_msg_timing)
+		ddl_reset_core_time_variables(ENC_OP_TIME);
 
 	if (!DDL_IS_INITIALIZED(ddl_context)) {
 		VIDC_LOGERR_STRING("ddl_enc_end:Not_inited");
