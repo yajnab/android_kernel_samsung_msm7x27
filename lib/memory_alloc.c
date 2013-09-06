@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -24,7 +24,6 @@
 
 
 #define MAX_MEMPOOLS 8
-#define PFN_ALIGN(x)	(((unsigned long)(x) + (PAGE_SIZE - 1)) & PAGE_MASK)
 
 struct mem_pool mpools[MAX_MEMPOOLS];
 
@@ -424,4 +423,3 @@ static int __init debugfs_mempool_init(void)
 }
 
 module_init(debugfs_mempool_init);
-

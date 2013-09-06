@@ -123,4 +123,32 @@ static inline int cpu_is_msm8x60(void)
 	return cpu == MSM_CPU_8X60;
 }
 
+static inline int cpu_is_msm8960(void)
+{
+#ifdef CONFIG_ARCH_MSM8960
+	return read_msm_cpu_type() == MSM_CPU_8960;
+#else
+	return 0;
+#endif
+}
+
+static inline int cpu_is_apq8064(void)
+{
+#ifdef CONFIG_ARCH_APQ8064
+	return read_msm_cpu_type() == MSM_CPU_8064;
+#else
+	return 0;
+#endif
+}
+
+static inline int cpu_is_msm8930(void)
+{
+#ifdef CONFIG_ARCH_MSM8930
+	return (read_msm_cpu_type() == MSM_CPU_8930) ||
+	       (read_msm_cpu_type() == MSM_CPU_8627);
+#else
+	return 0;
+#endif
+}
+
 #endif

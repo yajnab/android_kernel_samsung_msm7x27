@@ -3140,7 +3140,8 @@ struct platform_device *msm_fb_add_device(struct platform_device *pdev)
 }
 EXPORT_SYMBOL(msm_fb_add_device);
 
-int get_fb_phys_info(unsigned long *start, unsigned long *len, int fb_num)
+int get_fb_phys_info(unsigned long *start, unsigned long *len, int fb_num,
+	int subsys_id)
 {
 	struct fb_info *info;
 

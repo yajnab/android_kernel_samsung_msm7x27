@@ -245,4 +245,3 @@ done:
 	read_unlock(&pool->lock);
 }
 EXPORT_SYMBOL(gen_pool_free);
-

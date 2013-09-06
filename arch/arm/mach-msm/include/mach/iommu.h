@@ -99,12 +99,19 @@ struct msm_iommu_ctx_drvdata {
 	struct list_head attached_elm;
 };
 
+#ifdef CONFIG_MSM_IOMMU
 /*
  * Look up an IOMMU context device by its context name. NULL if none found.
  * Useful for testing and drivers that do not yet fully have IOMMU stuff in
  * their platform devices.
  */
 struct device *msm_iommu_get_ctx(const char *ctx_name);
+#else
+static inline struct device *msm_iommu_get_ctx(const char *ctx_name)
+{
+        return NULL;
+}
+#endif
 
 /*
  * Interrupt handler for the IOMMU context fault interrupt. Hooking the
