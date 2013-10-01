@@ -322,11 +322,6 @@ static inline void console_verbose(void)
 		console_loglevel = 15;
 }
 
-struct va_format {
-	const char *fmt;
-	va_list *va;
-};
-
 extern void bust_spinlocks(int yes);
 extern void wake_up_klogd(void);
 extern int oops_in_progress;		/* If set, an oops, panic(), BUG() or die() is in progress */
