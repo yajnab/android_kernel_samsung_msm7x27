@@ -14,7 +14,7 @@ echo $1 > VERSION
 VERSION='cat VERSION'
 $yellow
 MODULES=./gluon_works/bootimage/boot/lib/modules
-TOOLCHAIN=../../../../../../arm-2011.03/bin/arm-none-eabi
+TOOLCHAIN=../linaro/bin/arm-eabi
 $blue
 echo " |========================================================================| "
 echo " |*************************** GLUON KERNEL *******************************| "
@@ -63,14 +63,14 @@ clear
 $cyan
 echo " Making config"
 $violet
-make gluon_beni_defconfig
+ARCH=arm CROSS_COMPILE=../linaro/bin/arm-eabi- make gluon_beni_defconfig
 clear
 
 
 $cyan
 echo "Making the zImage-the real deal"
 $violet
-make -j16
+ARCH=arm CROSS_COMPILE=../linaro/bin/arm-eabi- make -j16
 clear
 $cyan 
 mkdir gluon_works/bootimage/source_img
