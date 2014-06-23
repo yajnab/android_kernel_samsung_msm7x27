@@ -802,7 +802,66 @@ acm_unbind(struct usb_configuration *c, struct usb_function *f)
 
 
 
-
+static int
+acm_interface_id_set(struct usb_configuration * c, struct usb_function *f, int intf_id)
+{
+	struct f_acm		*acm = func_to_acm(f);
+	struct usb_descriptor_header *descriptor;
+	
+	if(acm->ctrl_id > intf_id){
+		acm->ctrl_id = intf_id;
+		if (gadget_is_dualspeed(c->cdev->gadget)){
+			descriptor = acm_usb_find_decriptor(acm_hs_function,
+			f->hs_descriptors, (struct usb_descriptor_header *)&acm_iad_descriptor);
+			if(descriptor)
+				((struct usb_interface_assoc_descriptor *) descriptor)->bFirstInterface = intf_id;
+			descriptor = acm_usb_find_decriptor(acm_hs_function,
+			f->hs_descriptors, (struct usb_descriptor_header *)&acm_union_desc);
+			if(descriptor)
+				((struct usb_cdc_union_desc *) descriptor)->bMasterInterface0 = intf_id;
+		}
+		else{
+			descriptor = acm_usb_find_decriptor(acm_fs_function,
+			f->descriptors, (struct usb_descriptor_header *)&acm_iad_descriptor);
+			if(descriptor)
+				((struct usb_interface_assoc_descriptor *) descriptor)->bFirstInterface = intf_id;
+			descriptor = acm_usb_find_decriptor(acm_fs_function,
+			f->descriptors, (struct usb_descriptor_header *)&acm_union_desc);
+			if(descriptor)
+				((struct usb_cdc_union_desc *) descriptor)->bMasterInterface0 = intf_id;
+		}		
+		return 1;
+	}
+	else if(acm->ctrl_id < intf_id){
+		if((acm->data_id - acm->ctrl_id) == 1)
+			return 0;
+		acm->data_id= intf_id;
+		if (gadget_is_dualspeed(c->cdev->gadget)){
+			descriptor = acm_usb_find_decriptor(acm_hs_function,
+			f->hs_descriptors, (struct usb_descriptor_header *)&acm_union_desc);
+			if(descriptor)
+				((struct usb_cdc_union_desc *) descriptor)->bSlaveInterface0 = intf_id;
+			descriptor = acm_usb_find_decriptor(acm_hs_function,
+			f->hs_descriptors, (struct usb_descriptor_header *)&acm_call_mgmt_descriptor);
+			if(descriptor)
+				((struct usb_cdc_call_mgmt_descriptor *) descriptor)->bDataInterface = intf_id;
+		}
+		else{
+			descriptor = acm_usb_find_decriptor(acm_fs_function,
+			f->descriptors, (struct usb_descriptor_header *)&acm_union_desc);
+			if(descriptor)
+				((struct usb_cdc_union_desc *) descriptor)->bSlaveInterface0 = intf_id;
+			descriptor = acm_usb_find_decriptor(acm_fs_function,
+			f->descriptors, (struct usb_descriptor_header *)&acm_call_mgmt_descriptor);
+			if(descriptor)
+				((struct usb_cdc_call_mgmt_descriptor *) descriptor)->bDataInterface = intf_id;
+		}	
+	}
+	else
+		return 0;
+	
+	return 1;
+}
 
 /* Some controllers can't support CDC ACM ... */
 static inline bool can_support_cdc(struct usb_configuration *c)

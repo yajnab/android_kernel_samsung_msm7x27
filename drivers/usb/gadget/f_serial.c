@@ -741,7 +741,7 @@ static struct android_usb_function nmea_function = {
 
 int fserial_modem_bind_config(struct usb_configuration *c)
 {
-	
+	int ret;
 
 	/* See if composite driver can allocate
 	 * serial ports. But for now allocate

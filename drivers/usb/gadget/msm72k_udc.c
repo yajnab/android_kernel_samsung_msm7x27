@@ -2141,7 +2141,8 @@ static int msm72k_vbus_get_state(struct usb_gadget *_gadget)
 {
 	int b_session=0;
 	struct usb_info *ui = container_of(_gadget, struct usb_info, gadget);
-	
+	struct msm_otg *otg = to_msm_otg(ui->xceiv);
+
 	b_session= is_b_sess_vld();
 	return b_session;
 }

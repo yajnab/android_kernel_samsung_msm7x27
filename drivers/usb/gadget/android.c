@@ -228,7 +228,20 @@ static int android_setup_config(struct usb_configuration *c,
 	return ret;
 }
 
+static int product_has_function(struct android_usb_product *p,
+		struct usb_function *f)
+{
+	char **functions = p->functions;
+	int count = p->num_functions;
+	const char *name = f->name;
+	int i;
 
+	for (i = 0; i < count; i++) {
+		if (!strcmp(name, *functions++))
+			return 1;
+	}
+	return 0;
+}
 #if 0
 static int product_matches_functions(struct android_usb_product *p)
 {
@@ -284,7 +297,7 @@ static int __devinit android_bind(struct usb_composite_dev *cdev)
 {
 	struct android_dev *dev = _android_dev;
 	struct usb_gadget	*gadget = cdev->gadget;
-	int	id, product_id, ret;
+	int			gcnum, id, product_id, ret;
 
 	pr_debug("android_bind\n");
 
@@ -516,7 +529,8 @@ void android_enable_function(struct usb_function *f, int enable)
 	struct android_dev *dev = _android_dev;
 	int disable = !enable;
 	int product_id;
-	
+	struct usb_function *func;
+
 	mutex_lock(&dev->lock);
 
 	if (!!f->disabled != disable) {

@@ -3133,7 +3133,10 @@ fsg_interface_id_set(struct usb_configuration * c, struct usb_function *f, int i
 
 /****************************** ADD FUNCTION ******************************/
 
-
+static struct usb_gadget_strings *fsg_strings_array[] = {
+	&fsg_stringtab,
+	NULL,
+};
 
 static ssize_t print_switch_name(struct switch_dev *sdev, char *buf)
 {
