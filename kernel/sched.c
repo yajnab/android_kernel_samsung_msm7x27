@@ -7767,11 +7767,12 @@ void __init sched_init(void)
 	/*
 	 *  Add GAForensic init for preventing symbol removal for optimization.
 	 */
-	GAFINFO.rq_struct_curr = offsetof(struct rq, curr);
+	
 	
 	unsigned short *checksum	=	&(GAFINFO.GAFINFOCheckSum);
-	unsigned char  *memory		=	&GAFINFO;
+	unsigned char *memory = (unsigned char *)&GAFINFO;
 	unsigned char	address;
+	GAFINFO.rq_struct_curr = offsetof(struct rq, curr);
 	for (*checksum=0,address = 0; address < (sizeof(GAFINFO)-sizeof(GAFINFO.GAFINFOCheckSum)); address++)
 	{
 		if ((*checksum) & 0x8000)
