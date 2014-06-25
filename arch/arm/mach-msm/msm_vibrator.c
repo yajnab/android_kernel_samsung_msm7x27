@@ -49,8 +49,9 @@ VibeInt32 g_nLRA_GP_CLK_D = GP_CLK_N_DEFAULT;
 VibeInt32 g_nLRA_GP_CLK_PWM_MUL = IMM_PWM_MULTIPLIER;
 
 static struct hrtimer vibe_timer;
+#if defined(CONFIG_MACH_EUROPA) || defined(CONFIG_MACH_CALLISTO) || defined(CONFIG_MACH_CALLISTO)
 static int is_vibe_on = 0;
-
+#endif
 
 static int msm_vibrator_suspend(struct platform_device *pdev, pm_message_t state);
 static int msm_vibrator_resume(struct platform_device *pdev);
@@ -177,7 +178,7 @@ static int msm_vibrator_power(int on)
 
 	return VIBE_S_SUCCESS;
 }
-
+#if defined(CONFIG_MACH_EUROPA) || defined(CONFIG_MACH_CALLISTO) || defined(CONFIG_MACH_CALLISTO)
 static int vibe_set_pwm_freq(int nForce)
 {
 #if 1
@@ -213,9 +214,9 @@ static void set_pmic_vibrator(int on)
 			is_vibe_on = 0;
 		}
 	}
-
 }
 
+#endif
 #if 0
 static void pmic_vibrator_on(struct work_struct *work)
 {
@@ -270,8 +271,6 @@ static void pmic_vibrator_off(void)
 
 static void vibrator_enable(struct timed_output_dev *dev, int value)
 {
-	unsigned long flags;
-
 	hrtimer_cancel(&vibe_timer);
 
 	if (value == 0) {
