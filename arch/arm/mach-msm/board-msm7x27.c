@@ -4,12 +4,10 @@
 #include "board-europa.c"
 #elif defined(CONFIG_MACH_COOPER)
 #include "board-cooper.c"
-#elif defined(CONFIG_MACH_BENI)
-#include "board-beni.c"
-#elif defined(CONFIG_MACH_TASS)
-#include "board-tass.c"
 #elif defined(CONFIG_MACH_LUCAS)
 #include "board-lucas.c"
+#elif defined(CONFIG_MACH_BENI)|| defined(CONFIG_MACH_TASS)
+#include "board-beni_tass.c"
 #else
 #include "board-msm7x27_org.c"
 #endif

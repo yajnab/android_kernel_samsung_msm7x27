@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2007 Google, Inc.
  * Copyright (c) 2008-2010, Code Aurora Forum. All rights reserved.
@@ -99,14 +100,13 @@
 #endif
 
 #ifdef CONFIG_ARCH_MSM7X27
-#if defined(CONFIG_MACH_TASS)
-//#define MSM_PMEM_MDP_SIZE 	0x1700000 // size = 18<<20; in gralloc.cpp
+#if defined(CONFIG_MACH_BENI) || defined(CONFIG_MACH_TASS)
 #define MSM_PMEM_MDP_SIZE 	0x1B76000 // size = 23<<20; in gralloc.cpp
 #define MSM_PMEM_ADSP_SIZE 	0x9DE000 // 0x8DE000		// 3M :0x86E000, 2M : 0x77F000 
 #define MSM_PMEM_AUDIO_SIZE 	0x5B000 
-#define MSM_FB_SIZE 	 0xA0000 //	0x238000 // 0x500000//0x11C000	//0x5DC00 
+#define MSM_FB_SIZE 		0xA0000
 #define PMEM_KERNEL_EBI1_SIZE 	0x1C000 
-#endif	// CONFIG_MACH_TASS
+#endif	// CONFIG_MACH_BENI || CONFIG_MACH_TASS
 #endif	// CONFIG_ARCH_MSM7X27
 
 //#if defined(CONFIG_MACH_EUROPA)
@@ -351,7 +351,11 @@ static struct android_usb_product usb_products[] = {
 static struct usb_mass_storage_platform_data mass_storage_pdata = {
 	.nluns		= 1,
 	.vendor		= "SAMSUNG ",
-	.product        = "GT-S5570 Card",
+#if defined(CONFIG_MACH_BENI)
+	.product        = "GT-S5670 Card",
+#elif defined(CONFIG_MACH_TASS)
+	.product        = "GT-S5570 Card", 
+#endif
 	.release	= 0x0100,
 };
 
@@ -997,6 +1001,28 @@ static struct platform_device lcdc_s6d04m0_panel_device = {
 	}
 };
 #endif
+#if defined(CONFIG_MACH_BENI)
+#if defined(CONFIG_FB_MSM_LCDC_S6D04D1_WQVGA)
+static void lcdc_s6d04d1_config_gpios(int enable)
+{
+	config_lcdc_gpio_table(lcdc_gpio_table,
+		ARRAY_SIZE(lcdc_gpio_table), enable);
+}
+
+static struct msm_panel_common_pdata lcdc_s6d04d1_panel_data = {
+	.panel_config_gpio = lcdc_s6d04d1_config_gpios,
+	.gpio_num          = gpio_array_num,
+};
+
+static struct platform_device lcdc_s6d04d1_panel_device = {
+	.name   = "lcdc_s6d04d1_wqvga",
+	.id     = 0,
+	.dev    = {
+		.platform_data = &lcdc_s6d04d1_panel_data,
+	}
+};
+#endif
+#endif
 
 #if defined(CONFIG_FB_MSM_LCDC_TA8566_WQVGA)
 static void lcdc_ta8566_config_gpios(int enable)
@@ -1021,6 +1047,27 @@ static struct platform_device lcdc_ta8566_panel_device = {
 
 
 /* 20100823 hongkuk.son */
+#if defined(CONFIG_FB_MSM_LCDC_S6D16A0X_HVGA)
+static void lcdc_s6d16a0x_config_gpios(int enable)
+{
+	config_lcdc_gpio_table(lcdc_gpio_table,
+		ARRAY_SIZE(lcdc_gpio_table), enable);
+}
+
+static struct msm_panel_common_pdata lcdc_s6d16a0x_panel_data = {
+	.panel_config_gpio = lcdc_s6d16a0x_config_gpios,
+	.gpio_num          = gpio_array_num,
+};
+
+static struct platform_device lcdc_s6d16a0x_panel_device = {
+	.name   = "lcdc_s6d16a0x_hvga",
+	.id     = 0,
+	.dev    = {
+		.platform_data = &lcdc_s6d16a0x_panel_data,
+	}
+};
+#endif
+
 #if defined(CONFIG_FB_MSM_LCDC_S6D04H0A_QVGA)
 static void lcdc_s6d04h0a_config_gpios(int enable)
 {
@@ -1041,7 +1088,7 @@ static struct platform_device lcdc_s6d04h0a_panel_device = {
 	}
 };
 #endif
-/***/
+
 #if defined(CONFIG_FB_MSM_LCDC_S6D04D1_WQVGA)
 static void lcdc_s6d04d1_config_gpios(int enable)
 {
@@ -1062,6 +1109,7 @@ static struct platform_device lcdc_s6d04d1_panel_device = {
 	}
 };
 #endif
+
 
 
 static struct resource msm_fb_resources[] = {
@@ -1101,8 +1149,14 @@ static int msm_fb_detect_panel(const char *name)
 		else
 			ret = -ENODEV;
 #endif
-/***/
-
+#if defined(CONFIG_MACH_BENI)//Only for Beni
+#if defined(CONFIG_FB_MSM_LCDC_S6D04H0A_QVGA)
+		if (!strcmp(name, "lcdc_s6d04h0a_qvga"))
+			ret = 0;
+		else
+			ret = -ENODEV;
+#endif
+#endif
 //	}
 
 	return ret;
@@ -1198,7 +1252,7 @@ void wlan_setup_clock(int on);
 extern int bluesleep_start(void);
 extern void bluesleep_stop(void);
 
-#if defined(CONFIG_MACH_TASS)
+#if defined(CONFIG_MACH_BENI) || defined(CONFIG_MACH_TASS)
 static void bluetooth_setup_power(int on)
 {
 	struct vreg *vreg_bt_2_6v;	
@@ -1250,7 +1304,7 @@ static int bluetooth_power(int on)
 			}
 		}
 
-#if defined(CONFIG_MACH_TASS)
+#if defined(CONFIG_MACH_BENI) || defined(CONFIG_MACH_TASS)
 		bluetooth_setup_power(1); //jh8181.choi
 #endif
 		
@@ -1283,7 +1337,7 @@ static int bluetooth_power(int on)
 #endif
 		}
 				
-#if defined(CONFIG_MACH_TASS)
+#if defined(CONFIG_MACH_BENI) || defined(CONFIG_MACH_TASS)
 		bluetooth_setup_power(0); //jh8181.choi
 #endif
 	}
@@ -1359,8 +1413,80 @@ static struct platform_device msm_device_pmic_leds = {
 	.name   = "pmic-leds",
 	.id = -1,
 };
-
+#if 0 || defined(CONFIG_MACH_TASS)
 static struct i2c_board_info i2c_devices[] = {
+#if defined(CONFIG_MACH_BENI)
+#ifdef CONFIG_S5K5CA //PGH
+	{
+		I2C_BOARD_INFO("s5k5ca", 0x78>>1),
+	},
+#endif
+#ifdef CONFIG_SR200PC10 //PGH
+	{
+		I2C_BOARD_INFO("sr200pc10", 0x40>>1),
+	},
+#endif
+#ifdef CONFIG_S5K4CA //PGH
+	{
+		I2C_BOARD_INFO("s5k4ca", 0x5A>>1),
+	},
+#endif
+#ifdef CONFIG_MT9D112
+	{
+		I2C_BOARD_INFO("mt9d112", 0x78 >> 1),
+	},
+#endif	
+#ifdef CONFIG_S5K3E2FX
+	{
+		I2C_BOARD_INFO("s5k3e2fx", 0x20 >> 1),
+	},
+#endif
+#ifdef CONFIG_MT9P012
+	{
+		I2C_BOARD_INFO("mt9p012", 0x6C >> 1),
+	},
+#endif
+#ifdef CONFIG_MT9P012_KM
+	{
+		I2C_BOARD_INFO("mt9p012_km", 0x6C >> 2),
+	},
+#endif
+#if defined(CONFIG_MT9T013) || defined(CONFIG_SENSORS_MT9T013)
+	{
+		I2C_BOARD_INFO("mt9t013", 0x6C),
+	},
+#endif
+#ifdef CONFIG_VB6801
+	{
+		I2C_BOARD_INFO("vb6801", 0x20),
+	},
+#endif
+#ifdef CONFIG_SENSORS_MMC31XX
+	{
+		I2C_BOARD_INFO(MMC31XX_I2C_NAME,  MMC31XX_I2C_ADDR),
+	},
+#endif
+#ifdef CONFIG_SENSORS_BMA_ACCEL
+{
+		I2C_BOARD_INFO("bma_accel",0x08), // [HSS]  0X18 => 0X08 (2010.09.29)
+},
+#endif
+#ifdef CONFIG_SENSORS_KR3D_ACCEL
+{
+		I2C_BOARD_INFO("kr3dm_accel",KR3DM_I2C_ADDR >> 1),
+},
+#endif
+#ifdef CONFIG_AMP_MAX97000
+{
+		I2C_BOARD_INFO("max97000",0x9A>>1),
+},
+#endif
+#ifdef CONFIG_RADIO_SI4709
+{
+		I2C_BOARD_INFO("Si4709",0x20>>1),
+	},
+#endif	
+#endif
 #ifdef CONFIG_S5K5CCFF //PCAM
 	{
 		I2C_BOARD_INFO("s5k5ccff", 0x5A>>1),
@@ -1389,6 +1515,7 @@ static struct i2c_board_info i2c_devices[] = {
 	},
 #endif	
 };
+#endif
 
 static struct i2c_board_info touch_i2c_devices[] = {
 	#if defined CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4
@@ -1404,14 +1531,24 @@ static struct i2c_board_info touch_i2c_devices[] = {
 	},
 	#endif
 };
-
+#if 0 || defined(CONFIG_MACH_TASS)
 static struct i2c_board_info mus_i2c_devices[] = {
     {
             I2C_BOARD_INFO("fsa9280",0x4A>>1),
     },
+#ifdef CONFIG_SENSORS_TAOS
+	{
+		I2C_BOARD_INFO("taos", 0x39),
+	},
+#endif
 };
+#endif
 
-static struct i2c_board_info sensor_i2c_devices[] = {
+#ifdef CONFIG_MACH_BENI
+static struct i2c_board_info cam_i2c_devices[] = {
+#elif defined(CONFIG_MACH_TASS)
+static struct i2c_board_info sensor_i2c_devices[] = { 
+#endif
 #ifdef CONFIG_SENSORS_MMC31XX
 	{
 		I2C_BOARD_INFO(MMC31XX_I2C_NAME,  MMC31XX_I2C_ADDR),
@@ -1427,12 +1564,39 @@ static struct i2c_board_info sensor_i2c_devices[] = {
 		I2C_BOARD_INFO("bma_accel",0x08), // [HSS]  0X18 => 0X08 (2010.09.29)
 },
 #endif
-#ifdef CONFIG_SENSORS_TAOS
+#if defined(CONFIG_SENSORS_TAOS) && defined(CONFIG_MACH_BENI)
 	{
 		I2C_BOARD_INFO("taos",0x39),  
 	},
 #endif
 };
+
+#ifdef CONFIG_MACH_BENI
+static struct i2c_board_info i2c_devices_new[] = {
+
+#ifdef CONFIG_S5K5CA //PGH
+	{
+		I2C_BOARD_INFO("s5k5ca", 0x78>>1),
+	},
+#endif
+#ifdef CONFIG_ISX006
+	{
+		I2C_BOARD_INFO("isx006", 0x1A),
+	},
+#endif	
+#ifdef CONFIG_S5K4ECGX
+	{
+		I2C_BOARD_INFO("s5k4ecgx", 0x5A>>1),
+	},
+#endif	
+};
+
+static struct i2c_board_info mus_i2c_devices_new[] = {
+	{
+        	I2C_BOARD_INFO("fsa9280",0x4A>>1),
+	},
+};
+#endif
 
 #ifdef CONFIG_MSM_CAMERA
 static uint32_t camera_off_gpio_table[] = {
@@ -1602,7 +1766,7 @@ static struct msm_camera_sensor_flash_src msm_flash_src = {
 	._fsrc.pmic_src.high_current = 100,
 };
 
-
+#ifdef CONFIG_MACH_TASS
 #ifdef CONFIG_S5K5CCFF //PGH
 static struct msm_camera_sensor_flash_data flash_s5k5ccff = {
 	.flash_type = MSM_CAMERA_FLASH_LED,
@@ -1646,7 +1810,7 @@ static struct platform_device msm_camera_sensor_s5k5caff = {
         },   
 };
 #endif
-
+#endif
 
 #ifdef CONFIG_S5K5CA //PGH
 static struct msm_camera_sensor_flash_data flash_s5k5ca = {
@@ -1966,17 +2130,28 @@ static struct platform_device fsa9280_i2c_gpio_device = {
 		.platform_data  = &fsa9280_i2c_gpio_data,
 	},
 };
-
+#ifdef CONFIG_MACH_BENI
+static struct i2c_gpio_platform_data cam_i2c_gpio_data = {
+#elif defined(CONFIG_MACH_TASS)
 static struct i2c_gpio_platform_data sensor_i2c_gpio_data = {
+#endif
 	.sda_pin    = 37,
 	.scl_pin    = 36,
 };
 
+#ifdef CONFIG_MACH_BENI
+static struct platform_device cam_i2c_gpio_device = {
+#elif defined(CONFIG_MACH_TASS)
 static struct platform_device sensor_i2c_gpio_device = {  
+#endif  
 	.name       = "i2c-gpio",
 	.id     = 4,
 	.dev        = {
+	#ifdef CONFIG_MACH_BENI
+		.platform_data  = &cam_i2c_gpio_data,
+	#elif defined(CONFIG_MACH_TASS)
 		.platform_data  = &sensor_i2c_gpio_data,
+	#endif 
 	},
 };
 
@@ -2017,13 +2192,31 @@ static struct platform_device *devices[] __initdata = {
 	&msm_device_i2c,
 	&touch_i2c_gpio_device,
 	&fsa9280_i2c_gpio_device,
-	&sensor_i2c_gpio_device,
+#ifdef CONFIG_MACH_BENI
+	&cam_i2c_gpio_device,
+#elif defined(CONFIG_MACH_TASS)
+	&sensor_i2c_gpio_device, 
+#endif
 	&smc91x_device,
 	&android_pmem_kernel_ebi1_device,
 	&android_pmem_device,
 	&android_pmem_adsp_device,
 	&android_pmem_audio_device,
 	&msm_fb_device,
+#ifdef CONFIG_MACH_BENI
+#ifdef CONFIG_FB_MSM_LCDC_S6D04M0_QVGA
+	&lcdc_s6d04m0_panel_device,
+#endif
+#ifdef CONFIG_FB_MSM_LCDC_S6D04D1_WQVGA
+	&lcdc_s6d04d1_panel_device,
+#endif
+#ifdef CONFIG_FB_MSM_LCDC_TA8566_WQVGA
+	&lcdc_ta8566_panel_device,
+#endif
+#ifdef CONFIG_FB_MSM_LCDC_S6D16A0X_HVGA
+	&lcdc_s6d16a0x_panel_device,
+#endif
+#endif
 #ifdef CONFIG_FB_MSM_LCDC_S6D04H0A_QVGA
 	&lcdc_s6d04h0a_panel_device,
 #endif
@@ -2128,7 +2321,7 @@ void msm_serial_debug_init(unsigned int base, int irq,
 	|| defined(CONFIG_MMC_MSM_SDC3_SUPPORT)\
 	|| defined(CONFIG_MMC_MSM_SDC4_SUPPORT))
 
-static void sdcc_gpio_init(void)
+/*static void sdcc_gpio_init(void)
 {
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 	int rc = 0;
@@ -2140,7 +2333,7 @@ static void sdcc_gpio_init(void)
 		printk(KERN_ERR "%s: Failed to configure GPIO %d\n",
 				__func__, rc);
 #endif
-	/* SDC1 GPIOs */
+	// SDC1 GPIOs /
 #ifdef CONFIG_MMC_MSM_SDC1_SUPPORT
 	if (gpio_request(51, "sdc1_data_3"))
 		pr_err("failed to request gpio sdc1_data_3\n");
@@ -2158,7 +2351,7 @@ static void sdcc_gpio_init(void)
 	if (machine_is_msm7x25_ffa())
 		return;
 
-	/* SDC2 GPIOs */
+	// SDC2 GPIOs //
 #ifdef CONFIG_MMC_MSM_SDC2_SUPPORT
 	if (gpio_request(62, "sdc2_clk"))
 		pr_err("failed to request gpio sdc2_clk\n");
@@ -2176,7 +2369,7 @@ static void sdcc_gpio_init(void)
 	if (machine_is_msm7x27_ffa())
 		return;
 
-	/* SDC3 GPIOs */
+	// SDC3 GPIOs 
 #ifdef CONFIG_MMC_MSM_SDC3_SUPPORT
 	if (gpio_request(88, "sdc3_clk"))
 		pr_err("failed to request gpio sdc3_clk\n");
@@ -2192,7 +2385,7 @@ static void sdcc_gpio_init(void)
 		pr_err("failed to request gpio sdc3_data_0\n");
 #endif
 
-	/* SDC4 GPIOs */
+	// SDC4 GPIOs //
 #ifdef CONFIG_MMC_MSM_SDC4_SUPPORT
 	if (gpio_request(19, "sdc4_data_3"))
 		pr_err("failed to request gpio sdc4_data_3\n");
@@ -2207,7 +2400,7 @@ static void sdcc_gpio_init(void)
 	if (gpio_request(109, "sdc4_clk"))
 		pr_err("failed to request gpio sdc4_clk\n");
 #endif
-}
+}**/
 
 
 static unsigned long vreg_sts, gpio_sts;
@@ -2516,7 +2709,7 @@ struct vreg *vwlan_3_3v;
  {
    gpio_set_value(VDD_WLAN_EN, 0);  /* VDD_WLAN_EN Disable */ 
   /* power off for sleep current */
-  
+
   /* Because happened sleep current issue in TSTC when checked TASS Froyo version,
      disable code is blocked only Tass, Beni, Bennett - There have same problem*/  
   //vreg_disable(vwlan_3_3v);
@@ -2545,7 +2738,7 @@ void wlan_setup_power(int on, int detect)
 #endif /* WLAN_HOST_WAKE */
 		gpio_set_value(gpio_wlan_reset_n, 0);	/* WLAN_RESET */
 
-#if defined(CONFIG_MACH_TASS) /* Atheros */
+#if defined(CONFIG_MACH_BENI) || defined(CONFIG_MACH_TASS) /* Atheros */
 		if (gpio_get_value(BT_PWR) == 0) {
 			mdelay(30);
 			wlan_setup_clock(0);		
@@ -2629,6 +2822,8 @@ static struct mmc_platform_data msm7x2x_sdc4_data = {
 
 static void __init msm7x2x_init_mmc(void)
 {
+	int rc = 0;
+	rc = gpio_tlmm_config(GPIO_CFG(49, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	if (!machine_is_msm7x25_ffa() && !machine_is_msm7x27_ffa()) {
 		vreg_mmc = vreg_get(NULL, "ldo16");
 		vreg_mmc2 = vreg_get(NULL, "ldo15");
@@ -2648,13 +2843,11 @@ static void __init msm7x2x_init_mmc(void)
 
 
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
-	int rc = 0;
 	if (gpio_request(49, "sdc1_status_irq"))
 		pr_err("failed to request gpio sdc1_status_irq\n");
-	rc = gpio_tlmm_config(GPIO_CFG(49, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
-	if (rc)
-		printk(KERN_ERR "%s: Failed to configure GPIO %d\n",
-				__func__, rc);
+	if (rc){
+		printk(KERN_ERR "%s: Failed to configure GPIO %d\n",__func__, rc);
+	}
 #endif
 
 
@@ -2924,11 +3117,37 @@ static void __init msm7x2x_init(void)
 #endif
 	msm_device_i2c_init();
 	
+#ifdef CONFIG_MACH_BENI
+#if 0	//ino.baek 2010-08-26 : Changed Cooper H/W rev 0x3 -> 0x1	
+	// WLAN_RESET_N 
+	if( board_hw_revision < 3 )
+		gpio_wlan_reset_n = 78;
+		
+	if( board_hw_revision )
+	{
+		i2c_register_board_info(0, i2c_devices_new, ARRAY_SIZE(i2c_devices_new));
+		i2c_register_board_info(2, touch_i2c_devices, ARRAY_SIZE(touch_i2c_devices));
+		i2c_register_board_info(3, mus_i2c_devices_new, ARRAY_SIZE(mus_i2c_devices_new));
+	}
+	else
+	{
 	i2c_register_board_info(0, i2c_devices, ARRAY_SIZE(i2c_devices));
 	i2c_register_board_info(2, touch_i2c_devices, ARRAY_SIZE(touch_i2c_devices));
 	i2c_register_board_info(3, mus_i2c_devices, ARRAY_SIZE(mus_i2c_devices));
+	}
+#else
+	i2c_register_board_info(0, i2c_devices_new, ARRAY_SIZE(i2c_devices_new));
+	i2c_register_board_info(2, touch_i2c_devices, ARRAY_SIZE(touch_i2c_devices));
+	i2c_register_board_info(3, mus_i2c_devices_new, ARRAY_SIZE(mus_i2c_devices_new));
+#endif
+	i2c_register_board_info(4, cam_i2c_devices, ARRAY_SIZE(cam_i2c_devices));
+#endif
+#ifdef CONFIG_MACH_TASS
+    i2c_register_board_info(0, i2c_devices, ARRAY_SIZE(i2c_devices));
+	i2c_register_board_info(2, touch_i2c_devices, ARRAY_SIZE(touch_i2c_devices));
+	i2c_register_board_info(3, mus_i2c_devices, ARRAY_SIZE(mus_i2c_devices));
 	i2c_register_board_info(4, sensor_i2c_devices, ARRAY_SIZE(sensor_i2c_devices));
-
+#endif
 #ifdef CONFIG_SURF_FFA_GPIO_KEYPAD
 	if (machine_is_msm7x25_ffa() || machine_is_msm7x27_ffa())
 		platform_device_register(&keypad_device_7k_ffa);
@@ -3080,7 +3299,19 @@ MACHINE_START(MSM7X27_SURF, "GT-I5500 Board")
 MACHINE_END
 #endif
 
-#ifdef	CONFIG_MACH_TASS	
+#ifdef	CONFIG_MACH_BENI	
+MACHINE_START(MSM7X27_SURF, "GT-S5670 Board")
+#ifdef CONFIG_MSM_DEBUG_UART
+	.phys_io        = MSM_DEBUG_UART_PHYS,
+	.io_pg_offst    = ((MSM_DEBUG_UART_BASE) >> 18) & 0xfffc,
+#endif
+	.boot_params	= PHYS_OFFSET + 0x100,
+	.map_io		= msm7x2x_map_io,
+	.init_irq	= msm7x2x_init_irq,
+	.init_machine	= msm7x2x_init,
+	.timer		= &msm_timer,
+MACHINE_END
+#elif defined(CONFIG_MACH_TASS)
 MACHINE_START(MSM7X27_SURF, "GT-S5570 Board")
 #ifdef CONFIG_MSM_DEBUG_UART
 	.phys_io        = MSM_DEBUG_UART_PHYS,
